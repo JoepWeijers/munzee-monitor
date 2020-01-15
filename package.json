@@ -1,0 +1,20 @@
+{
+  "name": "munzee-monitor",
+  "version": "1.0.0",
+  "description": "Monitor to track activity on Munzees",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joep Weijers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoepWeijers/munzee-monitor"
+  },
+  "dependencies": {
+    "request": "2.88.0",
+    "request-promise-native": "1.0.8"
+  }
+}
