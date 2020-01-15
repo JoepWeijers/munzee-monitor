@@ -1,5 +1,24 @@
 const request = require('request-promise-native');
 
+const munzeeCache = [{
+    munzee_id: 71649885,
+    munzee_name: 'Project Escape 42',
+    munzee_lat: '51.3297566',
+    munzee_long: '5.0679588'
+  },
+  {
+    munzee_id: 71649886,
+    munzee_name: 'Project Escape 43',
+    munzee_lat: '51.3301048',
+    munzee_long: '5.0703809'
+  },
+  {
+    munzee_id: 71649887,
+    munzee_name: 'Project Escape 44',
+    munzee_lat: '51.3291693',
+    munzee_long: '5.0676826'
+  }]
+
 function getRequestOptions(url, body) {
     return {
         "url" : url,
@@ -45,10 +64,7 @@ function logMunzeeActivity(munzeeId, munzeeName) {
 }
 
 function getLatestActivity() {
-    return Promise.all([
-                logMunzeeActivity(71649885, "42"), 
-                logMunzeeActivity(71649886, "43"),
-                logMunzeeActivity(71649887, "44")])
+    return Promise.all(munzeeCache.map(it => logMunzeeActivity(it.munzee_id, it.munzee_name)))
             .then(munzees => {
                 return munzees
                     .flat()
@@ -62,7 +78,7 @@ function getLatestActivity() {
 }
 
 function getMunzeeData() {
-    return Promise.all([getMunzeeIdAndName("https://www.munzee.com/m/joepweijers/42/")])
+    return Promise.all([...Array(50).keys()].map(it => getMunzeeIdAndName(`https://www.munzee.com/m/joepweijers/${it}/`)))
         .then(munzees => {
             return munzees
                 // .filter(it => it.deployed)
@@ -82,6 +98,6 @@ const print = async (func) => {
     console.log(data);
 }
 
-print(getMunzeeData);
+//print(getMunzeeData);
 
 print(getLatestActivity);
