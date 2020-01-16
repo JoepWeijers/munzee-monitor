@@ -1,9 +1,23 @@
 <html>
     <head>
         <title>Munzee monitor</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     </head>
 
     <body>
-Hoi
+        <div id="app">
+            <template v-if="loading">
+                Loading...
+            </template>
+
+            <template v-else>
+                <ul>
+                    <li v-for="activityEntry in activityEntries">
+                        {{ activityEntry }}
+                    </li>
+                </ul>
+            </template>
+        </div>
+        <script src="client.js"></script>
     </body>
 </html>
