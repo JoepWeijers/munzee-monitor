@@ -2,24 +2,16 @@
     <head>
         <title>Munzee monitor</title>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">
     </head>
 
     <body>
         <div id="app">
-            <template v-if="loading">
-                Loading...
-            </template>
-
-            <template v-else>
-                <ul>
-                    <li v-for="activityEntry in activityEntries">
-                        {{ activityEntry }}
-                    </li>
-                </ul>
-                <template v-if="newEntries">
-                    NEW!
-                </template>
-            </template>
+            <ul>
+                <li v-for="it in activityEntries" v-bind:class="{'newActivity': it.isNew}">
+                    <b>{{ new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"}).slice(0,5) }}</b> {{it.username}} vond <b>{{it.munzee_name}}</b> om {{new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}}
+                </li>
+            </ul>
         </div>
         <script src="client.js"></script>
     </body>

@@ -2,7 +2,6 @@ var app = new Vue({
     el: '#app',
     data: {
         loading: false,
-        newEntries: false,
         activityEntries: []
     },
     created() {
@@ -19,6 +18,17 @@ var app = new Vue({
             }
             return a.entry_at_unix === b.entry_at_unix && a.username === b.username && a.munzee_name === b.munzee_name;
         },
+        markNew(newArray, oldArray, equals) {
+            for (var i = 0; i < newArray.length; ++i) {
+                newArray[i].isNew = true;
+                for (var j = 0; j < oldArray.length; ++j) {
+                    if (equals(newArray[i], oldArray[j])) {
+                        newArray[i].isNew = false;
+                        break;
+                    }
+                }
+            }
+        },
         arrayEquals(a, b, equals) {
             if (a === b) return true;
             if (a == null || b == null || a.length != b.length) return false;
@@ -32,7 +42,7 @@ var app = new Vue({
         },
         activitiesToString(activities) {
             return activities.map(it => {
-                return `${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}: ${it.username} vond ${it.munzee_name} om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
+                return `<b>${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"}).slice(0,5)}</b> ${it.username} vond <b>${it.munzee_name}</b> om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
             })
         },
         getDataFromApi() {
@@ -47,9 +57,10 @@ var app = new Vue({
             })
             .then(newActivity => {
                 this.loading = false;
-                const newActivityFormatted = this.activitiesToString(newActivity);
-                this.newEntries = !this.arrayEquals(this.activityEntries, newActivityFormatted, (a,b) => a === b);
-                this.activityEntries = newActivityFormatted;
+                if (this.activityEntries.length > 0) {
+                    this.markNew(newActivity, this.activityEntries, this.activityEquals);
+                }
+                this.activityEntries = newActivity;
             });
         }
     }
