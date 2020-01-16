@@ -1,6 +1,7 @@
 const request = require('request-promise-native');
 const express = require("express");
 const app = express();
+const port = process.env.PORT || 80;
 
 var activityCache = [];
 
@@ -164,6 +165,6 @@ app.post("/reload", async (req, res) => {
     res.json(munzeeData);
 });
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+app.listen(port, () => {
+    console.log("Server running on port " + port);
 });
