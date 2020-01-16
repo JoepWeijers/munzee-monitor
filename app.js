@@ -1,6 +1,9 @@
 const request = require('request-promise-native');
+const express = require("express");
+const path = require("path");
+const app = express();
 
-const munzeeCache = [{
+var munzeeCache = [{
     munzee_id: 71649885,
     munzee_name: 'Project Escape 42',
     munzee_lat: '51.3297566',
@@ -78,7 +81,10 @@ function getLatestActivity() {
 }
 
 function getMunzeeData() {
-    return Promise.all([...Array(50).keys()].map(it => getMunzeeIdAndName(`https://www.munzee.com/m/joepweijers/${it}/`)))
+    return Promise.all(
+            [...Array(48).keys()]
+            .filter(it => it >= 40)
+            .map(it => getMunzeeIdAndName(`https://www.munzee.com/m/joepweijers/${it}/`)))
         .then(munzees => {
             return munzees
                 // .filter(it => it.deployed)
@@ -98,6 +104,19 @@ const print = async (func) => {
     console.log(data);
 }
 
-//print(getMunzeeData);
+app.use(express.static('client'));
 
-print(getLatestActivity);
+app.get("/activity", async (req, res) => {
+    const activity = await getLatestActivity();
+    res.json(activity);
+});
+
+app.post("/reload", async (req, res) => {
+    const munzeeData = await getMunzeeData();
+    munzeeCache = munzeeData;
+    res.json(munzeeData);
+});
+
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
