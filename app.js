@@ -133,7 +133,7 @@ const refreshActivityCache = async () => {
             .concat(newActivity)
             .sort(activitySort)
             .reverse()
-            .slice(0, 10);
+            .slice(0, 30);
     
     return newActivity;
 }

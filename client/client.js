@@ -1,6 +1,7 @@
 var app = new Vue({
     el: '#app',
     data: {
+        numberOfEntries: 15,
         loading: false,
         activityEntries: []
     },
@@ -10,6 +11,15 @@ var app = new Vue({
         setInterval(function () {
             this.getDataFromApi();
         }.bind(this), 4000);
+
+        const params = new URLSearchParams(window.location.search.substring(1));
+        let n = params.get("n");
+        if (typeof n !== 'undefined') {
+            n = Number.parseInt(n);
+            if (!Number.isNaN(n)) {
+                this.numberOfEntries = n;
+            }
+        }
     },
     methods: {
         activityEquals(a, b) {
@@ -57,10 +67,11 @@ var app = new Vue({
             })
             .then(newActivity => {
                 this.loading = false;
+                reducedActivities = newActivity.slice(0, this.numberOfEntries);
                 if (this.activityEntries.length > 0) {
-                    this.markNew(newActivity, this.activityEntries, this.activityEquals);
+                    this.markNew(reducedActivities, this.activityEntries, this.activityEquals);
                 }
-                this.activityEntries = newActivity;
+                this.activityEntries = reducedActivities;
             });
         }
     }
