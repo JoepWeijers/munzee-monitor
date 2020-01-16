@@ -9,7 +9,7 @@
     <body>
         <div id="app">
             <ul>
-                <li v-for="it in activityEntries" v-bind:class="{'newActivity': it.isNew}">
+                <li v-for="it in activityEntries" v-bind:class="{'newActivity': it.isNew}" v-on:click="open(it.munzee_url)">
                     <b>{{ new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"}).slice(0,5) }}</b> {{it.username}} vond <b>{{it.munzee_name}}</b> om {{new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}}
                 </li>
             </ul>

@@ -7,18 +7,21 @@ var activityCache = [];
 var munzeeCache = [{
     munzee_id: 71649885,
     munzee_name: 'Project Escape 42',
+    munzee_url: "http:\/\/www.munzee.com\/m\/joepweijers\/42\/",
     munzee_lat: '51.3297566',
     munzee_long: '5.0679588'
   },
   {
     munzee_id: 71649886,
     munzee_name: 'Project Escape 43',
+    munzee_url: "http:\/\/www.munzee.com\/m\/joepweijers\/43\/",
     munzee_lat: '51.3301048',
     munzee_long: '5.0703809'
   },
   {
     munzee_id: 71649887,
     munzee_name: 'Project Escape 44',
+    munzee_url: "http:\/\/www.munzee.com\/m\/joepweijers\/44\/",
     munzee_lat: '51.3291693',
     munzee_long: '5.0676826'
   }]
@@ -48,7 +51,7 @@ function getMunzeeIdAndName(url) {
         });
 }
 
-function logMunzeeActivity(munzeeId, munzeeName) {
+function logMunzeeActivity(munzeeId, munzeeName, munzeeUrl) {
     return request.post(
         getRequestOptions("https://api.munzee.com/munzee/logs/", {
             "munzee_id": munzeeId,
@@ -60,8 +63,9 @@ function logMunzeeActivity(munzeeId, munzeeName) {
                 return [];
             }
             result.forEach(it => { 
-                it["munzee_id"] = munzeeId; 
+                it["munzee_id"] = munzeeId;
                 it["munzee_name"] = munzeeName;
+                it["munzee_url"] = munzeeUrl;
             });
             return result;
         })
@@ -74,7 +78,7 @@ function logMunzeeActivity(munzeeId, munzeeName) {
 const activitySort = (a, b) => a.entry_at_unix - b.entry_at_unix;
 
 function getLatestActivity() {
-    return Promise.all(munzeeCache.map(it => logMunzeeActivity(it.munzee_id, it.munzee_name)))
+    return Promise.all(munzeeCache.map(it => logMunzeeActivity(it.munzee_id, it.munzee_name, it.munzee_url)))
             .then(munzees => {
                 return munzees
                     .flat()
@@ -96,6 +100,7 @@ function getMunzeeData() {
                     return {
                         "munzee_id" : it.munzee_id,
                         "munzee_name" : it.friendly_name,
+                        "munzee_url" : it.code,
                         "munzee_lat" : it.latitude,
                         "munzee_long" : it.longitude
                     }

@@ -39,6 +39,9 @@ var app = new Vue({
                 }
             }
         },
+        open(url) {
+            window.open(url, '_blank');
+        },
         arrayEquals(a, b, equals) {
             if (a === b) return true;
             if (a == null || b == null || a.length != b.length) return false;
