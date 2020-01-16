@@ -140,6 +140,8 @@ const refreshActivityCache = async () => {
 
 refreshActivityCache();
 
+setInterval(refreshActivityCache, 15000);
+
 app.use(express.static('client'));
 
 app.get("/refreshactivity", async (req, res) => {
