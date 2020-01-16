@@ -1,7 +1,8 @@
 const request = require('request-promise-native');
 const express = require("express");
-const path = require("path");
 const app = express();
+
+var activityCache = [];
 
 var munzeeCache = [{
     munzee_id: 71649885,
@@ -55,6 +56,9 @@ function logMunzeeActivity(munzeeId, munzeeName) {
         }))
         .then(function (response) {
             const result = response.data;
+            if (result == null) {
+                return [];
+            }
             result.forEach(it => { 
                 it["munzee_id"] = munzeeId; 
                 it["munzee_name"] = munzeeName;
@@ -63,8 +67,11 @@ function logMunzeeActivity(munzeeId, munzeeName) {
         })
         .catch(function (err) {
             console.error(err);
+            return [];
         });
 }
+
+const activitySort = (a, b) => a.entry_at_unix - b.entry_at_unix;
 
 function getLatestActivity() {
     return Promise.all(munzeeCache.map(it => logMunzeeActivity(it.munzee_id, it.munzee_name)))
@@ -72,11 +79,8 @@ function getLatestActivity() {
                 return munzees
                     .flat()
                     .filter(it => it.type === 'capture')
-                    .sort((a, b) => a.entry_at_unix - b.entry_at_unix)
+                    .sort(activitySort)
                     .reverse()
-                    .map(it => {
-                        return `${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}: ${it.username} vond ${it.munzee_name} om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
-                    })
                 });
 }
 
@@ -99,16 +103,57 @@ function getMunzeeData() {
         });
 }
 
+const activitiesToString = (activities) => {
+    return activities.map(it => {
+        return `${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}: ${it.username} vond ${it.munzee_name} om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
+    })
+}
+
+function activityEqualTo(a) {
+    return (it) => {
+        return activityEquals(a, it);
+    }
+}
+
+const activityEquals = (a, b) => {
+    if (typeof a === 'undefined' || typeof b === 'undefined') {
+        return false;
+    }
+    return a.entry_at_unix === b.entry_at_unix && a.username === b.username && a.munzee_name === b.munzee_name;
+}
+
 const print = async (func) => {
     const data = await func();
     console.log(data);
 }
 
+const refreshActivityCache = async () => {
+    const activity = await getLatestActivity();
+    const newActivity = activity.filter(it => {
+        return (typeof activityCache.find(activityEqualTo(it)) === 'undefined');
+    });
+    if (newActivity.length === 0) {
+        return [];
+    }
+    activityCache = activityCache
+            .concat(newActivity)
+            .sort(activitySort)
+            .reverse();
+    
+    return newActivity;
+}
+
+refreshActivityCache();
+
 app.use(express.static('client'));
 
-app.get("/activity", async (req, res) => {
-    const activity = await getLatestActivity();
-    res.json(activity);
+app.get("/refreshactivity", async (req, res) => {
+    const newActivity = await refreshActivityCache();
+    res.json(activitiesToString(newActivity));
+});
+
+app.get("/activity", (req, res) => {
+    res.json(activitiesToString(activityCache));
 });
 
 app.post("/reload", async (req, res) => {
