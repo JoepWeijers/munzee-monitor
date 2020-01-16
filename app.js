@@ -103,12 +103,6 @@ function getMunzeeData() {
         });
 }
 
-const activitiesToString = (activities) => {
-    return activities.map(it => {
-        return `${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}: ${it.username} vond ${it.munzee_name} om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
-    })
-}
-
 function activityEqualTo(a) {
     return (it) => {
         return activityEquals(a, it);
@@ -138,7 +132,8 @@ const refreshActivityCache = async () => {
     activityCache = activityCache
             .concat(newActivity)
             .sort(activitySort)
-            .reverse();
+            .reverse()
+            .slice(0, 10);
     
     return newActivity;
 }
@@ -149,11 +144,11 @@ app.use(express.static('client'));
 
 app.get("/refreshactivity", async (req, res) => {
     const newActivity = await refreshActivityCache();
-    res.json(activitiesToString(newActivity));
+    res.json(newActivity);
 });
 
 app.get("/activity", (req, res) => {
-    res.json(activitiesToString(activityCache));
+    res.json(activityCache);
 });
 
 app.post("/reload", async (req, res) => {
