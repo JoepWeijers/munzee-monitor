@@ -7,6 +7,8 @@ const webpush = require('web-push');
 const port = process.env.PORT || 80;
 const privateKey = process.env.SW_PRIVATE_KEY;
 const publicKey = process.env.SW_PUBLIC_KEY || "BKHcfZBeFKoeKhkgC1L9qbnG-1zrMymK-AuMSlqvgLgLnbKHpVy5hHNFCcwIWnagUvoaXWgNnjoQJnIN6-i0i5E";
+const testMode = process.env.TEST_MODE && (process.env.TEST_MODE == 'true');
+const refreshRate = process.env.REFRESH_RATE || 20000;
 
 var activityCache = [];
 
@@ -144,11 +146,11 @@ function getLatestActivity() {
 function getMunzeeData() {
     return Promise.all(
             [...Array(48).keys()]
-            .filter(it => it >= 40)
+            .filter(it => !testMode || (it >= 40))
             .map(it => getMunzeeIdAndName(`https://www.munzee.com/m/joepweijers/${it}/`)))
         .then(munzees => {
             return munzees
-                // .filter(it => it.deployed)
+                .filter(it => testMode || it.deployed)
                 .map(it => { 
                     return {
                         "munzee_id" : it.munzee_id,
@@ -198,7 +200,7 @@ const refreshActivityCache = async () => {
 
 refreshActivityCache();
 
-setInterval(refreshActivityCache, 15000);
+setInterval(refreshActivityCache, refreshRate);
 
 app.use(express.static('client'));
 app.use(bodyParser.json());
@@ -291,5 +293,9 @@ app.post('/subscribed', function (req, res) {
 });  
 
 app.listen(port, () => {
-    console.log("Server running on port " + port);
+    if (testMode) {
+        console.log("Running in testing mode");
+    }
+    console.log(`Backend refreshes every ${refreshRate} ms`)
+    console.log(`Server running on port ${port}`);
 });
