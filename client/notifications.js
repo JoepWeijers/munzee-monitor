@@ -5,7 +5,6 @@ const applicationServerPublicKey = 'BKHcfZBeFKoeKhkgC1L9qbnG-1zrMymK-AuMSlqvgLgL
 const pushButton = document.querySelector('.js-push-btn');
 
 let isSubscribed = false;
-let subscriptionId = null;
 let swRegistration = null;
 
 function urlB64ToUint8Array(base64String) {
@@ -24,11 +23,13 @@ function urlB64ToUint8Array(base64String) {
 }
 
 async function updateSubscriptionOnServer(subscription) {
+    const subscriptionId = localStorage.getItem("subscriptionId");
     if (subscription != null) {
         await sendSubscriptionToBackEnd(subscription);
     } else if (subscriptionId != null) {
         console.log("Removing subscription: " + subscriptionId);
         await sendUnsubscribeToBackEnd(subscriptionId);
+        localStorage.removeItem("subscriptionId");
     }
 }
   
@@ -83,7 +84,7 @@ function sendSubscriptionToBackEnd(subscription) {
         const result = await response.json();
         const id = result.data.subscriptionId;
         console.log("Registered subscription: " + id)
-        subscriptionId = id;
+        localStorage.setItem("subscriptionId", id);
         return result;
     })
     .then(function(responseData) {
