@@ -436,6 +436,7 @@ div#menu {
     cursor: pointer;
     border-style: none;
     white-space: nowrap;
+    background-color: transparent;
 }
 
 button.switch {
