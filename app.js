@@ -151,7 +151,7 @@ const activitiesToString = (activities) => {
 
 function getMunzeeData() {
     return Promise.all(
-            [...Array(48).keys()]
+            [...Array(57).keys()]
             .filter(it => !testMode || (it >= 40))
             .map(it => getMunzeeIdAndName(`https://www.munzee.com/m/joepweijers/${it}/`)))
         .then(munzees => {
