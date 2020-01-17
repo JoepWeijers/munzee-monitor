@@ -143,6 +143,12 @@ function getLatestActivity() {
                 });
 }
 
+const activitiesToString = (activities) => {
+    return activities.map(it => {
+        return `${new Date(it.entry_at).toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"}).slice(0, 5)}: ${it.username} vond ${it.munzee_name} om ${new Date(it.captured_at+"-06:00").toLocaleTimeString("nl-NL", {timeZone: "Europe/Amsterdam"})}`;
+    })
+}
+
 function getMunzeeData() {
     return Promise.all(
             [...Array(48).keys()]
@@ -195,6 +201,8 @@ const refreshActivityCache = async () => {
             .reverse()
             .slice(0, 30);
     
+    sendNotifications(activitiesToString(newActivity).join("\n"));
+
     return newActivity;
 }
 
