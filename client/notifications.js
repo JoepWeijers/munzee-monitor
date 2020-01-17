@@ -3,6 +3,7 @@
 const applicationServerPublicKey = 'BKHcfZBeFKoeKhkgC1L9qbnG-1zrMymK-AuMSlqvgLgLnbKHpVy5hHNFCcwIWnagUvoaXWgNnjoQJnIN6-i0i5E';
 
 const pushButton = document.querySelector('.js-push-btn');
+const checkbox = document.querySelector('#notificationsEnabled');
 
 let isSubscribed = false;
 let swRegistration = null;
@@ -151,9 +152,9 @@ function updateBtn() {
     }
     
     if (isSubscribed) {
-        pushButton.textContent = 'AAN';
+        checkbox.checked = true;
     } else {
-        pushButton.textContent = 'UIT';
+        checkbox.checked = false;
     }
     pushButton.disabled = false;
 }
@@ -173,5 +174,5 @@ if ('serviceWorker' in navigator && 'PushManager' in window) {
     });
 } else {
     console.warn('Push messaging is not supported');
-    pushButton.textContent = 'Push Not Supported';
+    pushButton.textContent = 'Niet ondersteund';
 }
