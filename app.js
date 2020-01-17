@@ -1,7 +1,12 @@
 const request = require('request-promise-native');
 const express = require("express");
 const app = express();
+const bodyParser = require('body-parser');
+const webpush = require('web-push');
+
 const port = process.env.PORT || 80;
+const privateKey = process.env.SW_PRIVATE_KEY;
+const publicKey = process.env.SW_PUBLIC_KEY || "BKHcfZBeFKoeKhkgC1L9qbnG-1zrMymK-AuMSlqvgLgLnbKHpVy5hHNFCcwIWnagUvoaXWgNnjoQJnIN6-i0i5E";
 
 var activityCache = [];
 
@@ -26,6 +31,53 @@ var munzeeCache = [{
     munzee_lat: '51.3291693',
     munzee_long: '5.0676826'
   }]
+
+const subscriptionCache = {};
+
+const notificationOptions = {
+    vapidDetails: {
+        subject: 'https://munzee-monitor.herokuapp.com/',
+        publicKey: publicKey,
+        privateKey: privateKey
+    },
+    TTL: 60 * 60
+};
+
+let nextSubscriptionId = 0;
+
+async function sendNotifications(data) {
+    return Promise.all(Object.values(subscriptionCache)
+        .filter(subscription => (typeof subscription.endpoint !== 'undefined'))
+        .map(subscription => {
+            webpush.sendNotification(
+                subscription,
+                data,
+                notificationOptions
+            )
+            .catch(err => {
+                console.log("Failed to push to one target");
+            });
+    }));
+}
+
+function isValidSaveRequest(req) {
+    return (typeof req.body !== 'undefined') && 
+            (typeof req.body.subscription !== 'undefined') &&
+            (typeof req.body.subscription.endpoint !== 'undefined');
+}
+
+async function saveSubscriptionToDatabase(subscription) {
+    const subscriptionId = ++nextSubscriptionId;
+    console.log("Registering new subscription: " + subscriptionId);
+    subscriptionCache[subscriptionId] = subscription;
+    return subscriptionId;
+}
+
+async function removeSubscriptionToDatabase(subscriptionId) {
+    console.log("Removing subscription: " + subscriptionId);
+    delete subscriptionCache[subscriptionId];
+    return subscriptionId;
+}
 
 function getRequestOptions(url, body) {
     return {
@@ -149,6 +201,7 @@ refreshActivityCache();
 setInterval(refreshActivityCache, 15000);
 
 app.use(express.static('client'));
+app.use(bodyParser.json());
 
 app.get("/refreshactivity", async (req, res) => {
     const newActivity = await refreshActivityCache();
@@ -164,6 +217,78 @@ app.post("/reload", async (req, res) => {
     munzeeCache = munzeeData;
     res.json(munzeeData);
 });
+
+app.post('/push', (req, res) => {
+    sendNotifications(req.body.data)
+    .then(() => {
+        res.status(200).send({success: true});
+    })
+    .catch((err) => {
+        if (err.statusCode) {
+            res.status(err.statusCode).send(err.body);
+        } else {
+            res.status(400).send(err.message);
+        }
+    });
+});
+
+app.post('/unsubscribe', function (req, res) {
+    if (typeof req.body == 'undefined' && typeof req.body.subscriptionId !== 'undefined') {
+        res.status(400);
+        res.send(JSON.stringify({
+            error: {
+                id: 'unable-to-unsubscribe',
+                message: '{ subscriptionId : 1} required'
+            }
+        }));
+        return;
+    }
+    return removeSubscriptionToDatabase(req.body.subscriptionId)
+    .then(function(subscriptionId) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ data: { success: true, subscriptionId: subscriptionId } }));
+    })
+    .catch(function(err) {
+        res.status(500);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({
+            error: {
+                id: 'unable-to-unscubscribe',
+                message: 'The unsubscribe was received but we were unable to remove it to our database.'
+            }
+        }));
+    });
+
+});
+
+app.post('/subscribed', function (req, res) {
+    if (!isValidSaveRequest(req, res)) {
+        res.status(400);
+        res.send(JSON.stringify({
+            error: {
+                id: 'unable-to-save-subscription',
+                message: 'The subscription did not contain all required fields.'
+            }
+        }));
+        return;
+    }
+
+    return saveSubscriptionToDatabase(req.body.subscription)
+        .then(function(subscriptionId) {
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ data: { success: true, subscriptionId: subscriptionId } }));
+        })
+        .catch(function(err) {
+            res.status(500);
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({
+                error: {
+                    id: 'unable-to-save-subscription',
+                    message: 'The subscription was received but we were unable to save it to our database.'
+                }
+            }));
+        });
+});  
 
 app.listen(port, () => {
     console.log("Server running on port " + port);

@@ -419,3 +419,11 @@ li.newActivity {
 b {
     font-weight: bolder;
 }
+
+div#menu {
+    position: absolute;
+    width: 100%;
+    height: 40px;
+    background-color: turquoise;
+    bottom: 0px;
+}

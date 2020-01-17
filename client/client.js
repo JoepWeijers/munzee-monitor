@@ -1,3 +1,5 @@
+'use strict';
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -65,12 +67,11 @@ var app = new Vue({
                 return res.json();
             })
             .catch(function (err) {
-                this.loading = false;
                 console.error(err);
             })
             .then(newActivity => {
                 this.loading = false;
-                reducedActivities = newActivity.slice(0, this.numberOfEntries);
+                let reducedActivities = newActivity.slice(0, this.numberOfEntries);
                 if (this.activityEntries.length > 0) {
                     this.markNew(reducedActivities, this.activityEntries, this.activityEquals);
                 }
